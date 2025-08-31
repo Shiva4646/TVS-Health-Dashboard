@@ -233,6 +233,12 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
       if (!error && data) {
         const uniqueDevicesMap = new Map<string, Device>();
 
+        // Device name mapping
+        const deviceNameMap: Record<string, string> = {
+          "E4:B3:23:B4:A0:34": "Device 1",
+          "CC:0A:97:15:4C:BC": "Device 2"
+        };
+
         data.forEach(row => {
           const mac = row.mac_address;
           if (mac) {
@@ -241,7 +247,7 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
             const isConnected = (Date.now() - lastUpdateTime) < DEVICE_OFFLINE_THRESHOLD;
             
             // Get device name based on MAC address
-            const deviceName = mac === "18:8B:0E:91:8B:98" ? "Device 1" : `Device ${mac}`;
+            const deviceName = deviceNameMap[mac] || `Unknown Device (${mac})`;
             
             if (!uniqueDevicesMap.has(mac) || 
                 new Date(row.updated_at) > new Date(uniqueDevicesMap.get(mac)!.updated_at_raw)) {
@@ -478,13 +484,16 @@ const formSchema = z.object({
         <div className="flex flex-col space-y-2">
           
            
-          <h1 className="text-lg lg:text-xl font-bold text-gray-900 bg-blue-600 to-cyan-400 bg-clip-text text-transparent">
-            <img 
+          <h1 className="text-lg lg:text-xl font-bold flex items-center justify-center gap-4">
+  <img 
     src="/Delphi_logo.png"  
     alt="Delphi TVS Logo" 
-    className="h-10 w-auto" 
-  />Cold Chamber Monitoring Device
-          </h1>
+    className="h-10 w-auto"
+  />
+  <span className="text-[#11568d] text-center"> {/* Using Delphi TVS blue color */}
+    Cold Chamber Monitoring Device
+  </span>
+</h1>
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
             <div className="flex items-center space-x-3">
     <p className="text-gray-600 text-xs font-medium">{getCurrentDate()}</p>
