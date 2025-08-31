@@ -480,7 +480,7 @@ const formSchema = z.object({
            
           <h1 className="text-lg lg:text-xl font-bold text-gray-900 bg-blue-600 to-cyan-400 bg-clip-text text-transparent">
             <img 
-    src="/Delphi_logo.png" 
+    src="/Delphi_logo.png"  
     alt="Delphi TVS Logo" 
     className="h-10 w-auto" 
   />Cold Chamber Monitoring Device
@@ -550,7 +550,6 @@ const formSchema = z.object({
                     };
                   });
                 }}
-                supabaseClient={supabase}
               />
             </DialogContent>
           </Dialog>
