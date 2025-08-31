@@ -447,10 +447,10 @@ const handleAlertFromLiveTest = useCallback((alertData: {
   // Add this function to get current time in 24-hour format
 const getCurrentTime = () => {
   return new Date().toLocaleTimeString('en-US', {
-    hour12: false,
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    hour12: true // Changed to true for 12-hour format
   });
 };
 
@@ -563,10 +563,10 @@ useEffect(() => {
   </span>
 </h1>
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
-            <div className="flex items-center space-x-3">
-    <p className="text-gray-600 text-xs font-medium">{getCurrentDate()}</p>
+            <div className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm">
+    <p className="text-gray-700 text-xs font-medium">{getCurrentDate()}</p>
     <span className="text-gray-400">|</span>
-    <p className="text-gray-600 text-xs font-medium">{currentTime}</p>
+    <p className="text-gray-700 text-xs font-semibold font-mono">{currentTime}</p>
   </div>
             <div className="flex items-center space-x-2">
               
