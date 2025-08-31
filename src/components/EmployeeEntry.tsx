@@ -14,7 +14,7 @@ interface EmployeeEntryProps {
     name: string;
     age: string;
     gender: string;
-    location: string;
+    deviceId: string;  // Changed from location
     bloodGroup: string;
     contactNumber: string;
   }) => Promise<void>;
@@ -28,7 +28,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
     lastName: '',
     age: '',
     gender: 'Male',
-    location: '',
+    deviceId: '',  // Changed from location
     bloodGroup: '',
     contactNumber: ''
   });
@@ -40,7 +40,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
       name: `${formData.firstName} ${formData.lastName}`,
       age: formData.age,
       gender: formData.gender,
-      location: formData.location,
+      deviceId: formData.deviceId,  // Changed from location
       bloodGroup: formData.bloodGroup,
       contactNumber: formData.contactNumber,
     };
@@ -57,7 +57,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
       lastName: '',
       age: '',
       gender: 'Male',
-      location: '',
+      deviceId: '',  // Changed from location
       bloodGroup: '',
       contactNumber: ''
     });
@@ -131,17 +131,21 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
           </div>
         </div>
 
-        {/* Location */}
+        {/* Device ID */}
         <div>
-          <Label htmlFor="location" className="font-medium">Location</Label>
-          <Input
-            id="location"
-            value={formData.location}
-            onChange={(e) => setFormData({...formData, location: e.target.value})}
-            className="bg-white border border-gray-300 text-black placeholder-gray-500"
-            placeholder="Chamber location"
+          <Label htmlFor="deviceId" className="font-medium">Device ID</Label>
+          <select
+            id="deviceId"
+            value={formData.deviceId}
+            onChange={(e) => setFormData({...formData, deviceId: e.target.value})}
+            className="w-full h-10 px-3 py-2 bg-white border border-gray-300 rounded-md text-black"
             required
-          />
+          >
+            <option value="">Select Device ID</option>
+            <option value="Device 1">Device 1</option>
+            <option value="Device 2">Device 2</option>
+            
+          </select>
         </div>
 
         {/* Blood Group and Contact Number */}

@@ -89,18 +89,16 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
     // Check if any numeric value is zero or null
     const hasZeroValue = 
       !newData.heart_rate || 
-      !newData.temperature || 
       !newData.respiratory_rate || 
       !newData.blood_pressure ||
       newData.heart_rate === 0 || 
-      newData.temperature === 0 || 
       newData.respiratory_rate === 0 || 
       newData.blood_pressure === "0";
 
     // If any value is zero, set all values to zero
     const processedData = hasZeroValue ? {
       heart_rate: 0,
-      temperature: 0,
+      temperature: newData.temperature, // Keep the actual temperature value
       blood_pressure: "0",
       respiratory_rate: 0,
       body_activity: "No Data"
@@ -129,12 +127,14 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
       setVitalStatuses(prevStatuses => {
         const resetStatuses = { ...prevStatuses };
         Object.keys(resetStatuses).forEach(key => {
-          resetStatuses[key] = {
-            count: 0,
-            lastAlertTime: 0,
-            isCritical: false,
-            value: key === 'bodyActivity' ? 'No Data' : undefined
-          };
+          if (key !== 'temperature') { // Skip resetting temperature status
+            resetStatuses[key] = {
+              count: 0,
+              lastAlertTime: 0,
+              isCritical: false,
+              value: key === 'bodyActivity' ? 'No Data' : undefined
+            };
+          }
         });
         return resetStatuses;
       });

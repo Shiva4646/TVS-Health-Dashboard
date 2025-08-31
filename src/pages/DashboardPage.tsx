@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Sheet } from 'lucide-react';
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,7 +46,7 @@ interface Employee {
   name: string;
   age: string;
   gender: string;
-  location: string;
+  deviceId: string;  // Changed from location
   bloodGroup: string;
   contactNumber: string;
 }
@@ -459,6 +460,16 @@ useEffect(() => {
   return () => clearInterval(timer);
 }, []);
 
+  // Update the form validation schema
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  age: z.string().min(1, { message: "Age is required" }),
+  gender: z.string().min(1, { message: "Gender is required" }),
+  deviceId: z.string().min(1, { message: "Device ID is required" }), // Changed from location
+  bloodGroup: z.string().min(1, { message: "Blood group is required" }),
+  contactNumber: z.string().min(10, { message: "Contact number must be 10 digits" })
+});
+
   return (
   <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
     {/* Header - Fixed height */}
@@ -467,13 +478,12 @@ useEffect(() => {
         <div className="flex flex-col space-y-2">
           
            
-          <h1 className="text-lg lg:text-xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-cyan-400 bg-clip-text text-transparent">
+          <h1 className="text-lg lg:text-xl font-bold text-gray-900 bg-blue-600 to-cyan-400 bg-clip-text text-transparent">
             <img 
     src="/Delphi_logo.png" 
     alt="Delphi TVS Logo" 
     className="h-10 w-auto" 
-  />
-            Cold Chamber Monitoring Device
+  />Cold Chamber Monitoring Device
           </h1>
           <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6">
             <div className="flex items-center space-x-3">
@@ -513,9 +523,14 @@ useEffect(() => {
               <EmployeeEntry 
                 onBack={() => setIsEmployeeEntryOpen(false)}
                 onAddEmployee={async (employeeData) => {
-                  const newEmployee = {
+                  const newEmployee: Employee = {
                     id: crypto.randomUUID(),
-                    ...employeeData
+                    name: employeeData.name,
+                    age: employeeData.age,
+                    gender: employeeData.gender,
+                    deviceId: employeeData.deviceId, // Using location as deviceId
+                    bloodGroup: employeeData.bloodGroup,
+                    contactNumber: employeeData.contactNumber
                   };
                   
                   setAllEmployees(prev => [...prev, newEmployee]);
@@ -680,11 +695,11 @@ useEffect(() => {
           </div>
 
           <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-cyan-50 rounded-md border border-gray-100">
-            <MapPin className="w-3 h-3 text-cyan-600 flex-shrink-0" />
+            <Monitor className="w-3 h-3 text-cyan-600 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Location</p>
+              <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Device ID</p>
               <p className="text-xs font-semibold text-gray-900">
-                {selectedEmployeeInCard.location}
+                {selectedEmployeeInCard.deviceId}
               </p>
             </div>
           </div>
@@ -710,9 +725,16 @@ useEffect(() => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-6">
-          <User className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-xs text-gray-500">No employee selected</p>
+        <div className="text-center py-12"> {/* Increased from py-6 to py-12 */}
+          <div className="flex flex-col items-center space-y-3"> {/* Added container with spacing */}
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+              <User className="w-6 h-6 text-gray-400" /> {/* Increased icon size */}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">No employee selected</p>
+              <p className="text-xs text-gray-400 mt-1">Select an employee to view details</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -801,9 +823,7 @@ useEffect(() => {
 
             {/* Chart Card - Fills remaining space */}
             <Card className="flex-grow bg-white rounded-xl shadow-lg overflow-hidden w-full">
-              <CardHeader className="flex-shrink-0 pb-2">
-                <CardTitle className="text-lg font-semibold">Live Monitoring</CardTitle>
-              </CardHeader>
+              
               <CardContent className="h-[calc(100vh-16rem)] p-0"> {/* Fixed height calculation */}
                 <VitalChart
                   title="Vital Signs"
@@ -915,4 +935,3 @@ const formatVitalValue = (type: string, value: number): string => {
 </div>
 
 export default DashboardPage;
-
