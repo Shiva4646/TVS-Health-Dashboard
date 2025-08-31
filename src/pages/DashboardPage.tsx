@@ -801,7 +801,7 @@ useEffect(() => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-12"> {/* Increased from py-6 to py-12 */}
+        <div className="text-center py-12"> {/* Increased from py-6 to py-12 and fetch*/}
           <div className="flex flex-col items-center space-y-3"> {/* Added container with spacing */}
             <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
               <User className="w-6 h-6 text-gray-400" /> {/* Increased icon size */}

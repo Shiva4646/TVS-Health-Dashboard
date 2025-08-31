@@ -4,6 +4,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '../lib/supatest';
 
+// Add MAC address mapping at the top of the file
+const DEVICE_MAC_MAP = {
+  'Device 1': 'E4:B3:23:B4:A0:34',
+  'Device 2': 'CC:0A:97:15:4C:BC'
+} as const;
+
 interface EmployeeEntryProps {
   onBack: () => void;
   onAddEmployee: (employee: { 
@@ -34,19 +40,35 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
     e.preventDefault();
 
     try {
-      // Modify the insert query
+      // Get MAC address for selected device
+      const macAddress = DEVICE_MAC_MAP[formData.deviceId as keyof typeof DEVICE_MAC_MAP];
+      
+      if (!macAddress) {
+        throw new Error('Invalid device selected');
+      }
+
+      // Create employee data with MAC address and initial vital values
+      const newEmployeeData = {
+        "First name": formData.firstName,
+        "Last name": formData.lastName,
+        "Age": parseInt(formData.age),
+        "Gender": formData.gender,
+        "Device ID": formData.deviceId,
+        "Blood Group": formData.bloodGroup,
+        "Contact Number": formData.contactNumber,
+        mac_address: macAddress,
+        heart_rate: 0,
+        temperature: 0,
+        respiratory_rate: 0,
+        blood_pressure: "0",
+        body_activity: "No Data",
+        updated_at: new Date().toISOString()
+      };
+
+      // Insert into Health Status table
       const { error } = await supabase
-        .from('Health Status')  // Remove quotes from table name
-        .insert({
-          "First name": formData.firstName,
-          "Last name": formData.lastName,
-          "Age": parseInt(formData.age),
-          "Gender": formData.gender,
-          "Device ID": formData.deviceId,
-          "Blood Group": formData.bloodGroup,
-          "Contact Number": formData.contactNumber,
-          updated_at: new Date().toISOString()
-        });
+        .from('Health Status')
+        .insert(newEmployeeData);
 
       if (error) {
         console.error('Supabase error:', error);
@@ -85,7 +107,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
       console.error('Error adding employee:', error);
       toast({
         title: "Error",
-        description: "Failed to add employee. Please check the console for details.",
+        description: error instanceof Error ? error.message : "Failed to add employee",
         variant: "destructive",
       });
     }
@@ -225,8 +247,8 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
             required
           >
             <option value="">Select Device ID</option>
-            <option value="Device 1">Device 1</option>
-            <option value="Device 2">Device 2</option>
+            <option value="Device 1">Device 1 (e4:b3:23:b4:a0:34)</option>
+            <option value="Device 2">Device 2 (CC:0A:97:15:4C:BC)</option>
             
           </select>
         </div>
