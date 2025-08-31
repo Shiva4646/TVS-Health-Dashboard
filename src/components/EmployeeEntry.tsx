@@ -29,28 +29,29 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
     contactNumber: ''
   });
 
+  // Update the handleSubmit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const newEmployeeData = {
-        "First name": formData.firstName,
-        "Last name": formData.lastName,
-        "Age": parseInt(formData.age),
-        "Gender": formData.gender,
-        "Device ID": formData.deviceId,
-        "Blood Group": formData.bloodGroup,
-        "Contact Number": formData.contactNumber,
-        updated_at: new Date().toISOString()
-      };
+      // Modify the insert query
+      const { error } = await supabase
+        .from('Health Status')  // Remove quotes from table name
+        .insert({
+          "First name": formData.firstName,
+          "Last name": formData.lastName,
+          "Age": parseInt(formData.age),
+          "Gender": formData.gender,
+          "Device ID": formData.deviceId,
+          "Blood Group": formData.bloodGroup,
+          "Contact Number": formData.contactNumber,
+          updated_at: new Date().toISOString()
+        });
 
-      // Insert into Supabase
-      const { data, error } = await supabase
-        .from('"Health Status"')
-        .insert([newEmployeeData])
-        .select();
-
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -58,7 +59,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
         variant: "default",
       });
 
-      // Call the onAddEmployee prop with the new data
+      // Call onAddEmployee after successful insert
       await onAddEmployee({
         name: `${formData.firstName} ${formData.lastName}`,
         age: formData.age,
@@ -84,7 +85,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
       console.error('Error adding employee:', error);
       toast({
         title: "Error",
-        description: "Failed to add employee. Please try again.",
+        description: "Failed to add employee. Please check the console for details.",
         variant: "destructive",
       });
     }
@@ -95,23 +96,34 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
     const fetchEmployees = async () => {
       try {
         const { data, error } = await supabase
-          .from('"Health Status"')
-          .select('id, "First name", "Last name", "Age", "Gender", "Device ID", "Blood Group", "Contact Number"')
-          .not('"First name"', 'is', null);
+          .from('Health Status')  // Remove quotes from table name
+          .select(`
+            id,
+            "First name",
+            "Last name",
+            "Age",
+            "Gender",
+            "Device ID",
+            "Blood Group",
+            "Contact Number"
+          `)
+          .not('First name', 'is', null);
 
         if (error) throw error;
 
-        const employees = data.map(record => ({
-          id: record.id,
-          name: `${record['First name']} ${record['Last name']}`,
-          age: record['Age']?.toString(),
-          gender: record['Gender'],
-          deviceId: record['Device ID'],
-          bloodGroup: record['Blood Group'],
-          contactNumber: record['Contact Number']
-        }));
+        if (data) {
+          const employees = data.map(record => ({
+            id: record.id,
+            name: `${record['First name']} ${record['Last name']}`,
+            age: record['Age']?.toString() || '',
+            gender: record['Gender'] || '',
+            deviceId: record['Device ID'] || '',
+            bloodGroup: record['Blood Group'] || '',
+            contactNumber: record['Contact Number'] || ''
+          }));
 
-        setAllEmployees(employees);
+          setAllEmployees(employees);
+        }
       } catch (error) {
         console.error('Error fetching employees:', error);
       }

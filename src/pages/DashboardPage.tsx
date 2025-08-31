@@ -476,6 +476,74 @@ const formSchema = z.object({
   contactNumber: z.string().min(10, { message: "Contact number must be 10 digits" })
 });
 
+  // Add this effect to fetch employees
+useEffect(() => {
+  const fetchEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Health Status')
+        .select(`
+          id,
+          "First name",
+          "Last name",
+          "Age",
+          "Gender",
+          "Device ID",
+          "Blood Group",
+          "Contact Number"
+        `)
+        .not('First name', 'is', null);
+
+      if (error) throw error;
+
+      if (data) {
+        const employees = data.map(record => ({
+          id: record.id,
+          name: `${record['First name']} ${record['Last name']}`,
+          age: record['Age']?.toString() || '',
+          gender: record['Gender'] || '',
+          deviceId: record['Device ID'] || '',
+          bloodGroup: record['Blood Group'] || '',
+          contactNumber: record['Contact Number'] || ''
+        }));
+
+        setAllEmployees(employees);
+
+        // Create employee map for device association
+        const empMap = new Map<string, { name: string }>();
+        data.forEach(record => {
+          if (record['Device ID']) {
+            empMap.set(record['Device ID'], {
+              name: `${record['First name']} ${record['Last name']}`
+            });
+          }
+        });
+
+        // Update employee map reference
+        Object.assign(employeeMap, empMap);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
+
+  fetchEmployees();
+
+  // Set up real-time subscription
+  const channel = supabase
+    .channel('employee-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'Health Status' },
+      fetchEmployees
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
   return (
   <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
     {/* Header - Fixed height */}
