@@ -34,21 +34,21 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
 
     try {
       const newEmployeeData = {
-        name: `${formData.firstName} ${formData.lastName}`,
-        age: formData.age,
-        gender: formData.gender,
-        device_id: formData.deviceId,
-        blood_group: formData.bloodGroup,
-        contact_number: formData.contactNumber,
+        "First name": formData.firstName,
+        "Last name": formData.lastName,
+        "Age": parseInt(formData.age),
+        "Gender": formData.gender,
+        "Device ID": formData.deviceId,
+        "Blood Group": formData.bloodGroup,
+        "Contact Number": formData.contactNumber,
         updated_at: new Date().toISOString()
       };
 
       // Insert into Supabase
       const { data, error } = await supabase
-        .from('Health Status')
+        .from('"Health Status"')
         .insert([newEmployeeData])
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
@@ -60,12 +60,12 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
 
       // Call the onAddEmployee prop with the new data
       await onAddEmployee({
-        name: newEmployeeData.name,
-        age: newEmployeeData.age,
-        gender: newEmployeeData.gender,
-        deviceId: newEmployeeData.device_id,
-        bloodGroup: newEmployeeData.blood_group,
-        contactNumber: newEmployeeData.contact_number
+        name: `${formData.firstName} ${formData.lastName}`,
+        age: formData.age,
+        gender: formData.gender,
+        deviceId: formData.deviceId,
+        bloodGroup: formData.bloodGroup,
+        contactNumber: formData.contactNumber
       });
 
       // Reset form
@@ -84,7 +84,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
       console.error('Error adding employee:', error);
       toast({
         title: "Error",
-        description: "Failed to add employee",
+        description: "Failed to add employee. Please try again.",
         variant: "destructive",
       });
     }
@@ -95,20 +95,20 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
     const fetchEmployees = async () => {
       try {
         const { data, error } = await supabase
-          .from('Health Status')
-          .select('*')
-          .not('name', 'is', null); // Only fetch records with employee data
+          .from('"Health Status"')
+          .select('id, "First name", "Last name", "Age", "Gender", "Device ID", "Blood Group", "Contact Number"')
+          .not('"First name"', 'is', null);
 
         if (error) throw error;
 
         const employees = data.map(record => ({
           id: record.id,
-          name: record.name,
-          age: record.age,
-          gender: record.gender,
-          deviceId: record.device_id,
-          bloodGroup: record.blood_group,
-          contactNumber: record.contact_number
+          name: `${record['First name']} ${record['Last name']}`,
+          age: record['Age']?.toString(),
+          gender: record['Gender'],
+          deviceId: record['Device ID'],
+          bloodGroup: record['Blood Group'],
+          contactNumber: record['Contact Number']
         }));
 
         setAllEmployees(employees);
@@ -119,15 +119,13 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
 
     fetchEmployees();
 
-    // Subscribe to changes
+    // Update subscription
     const channel = supabase
       .channel('employee-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'Health Status' },
-        () => {
-          fetchEmployees();
-        }
+        fetchEmployees
       )
       .subscribe();
 
@@ -217,7 +215,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
             <option value="">Select Device ID</option>
             <option value="Device 1">Device 1</option>
             <option value="Device 2">Device 2</option>
-            <option value="Device 3">Device 3</option>
+            
           </select>
         </div>
 
