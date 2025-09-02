@@ -235,8 +235,8 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
 
         // Device name mapping
         const deviceNameMap: Record<string, string> = {
-          "E4:B3:23:B4:A0:34": "Device 1",
-          "CC:0A:97:15:4C:BC": "Device 2"
+          "B4:3A:45:8A:2E:6C": "Device 1",
+          "54:32:04:89:95:1C": "Device 2"
         };
 
         data.forEach(row => {
