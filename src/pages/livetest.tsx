@@ -21,7 +21,7 @@ interface VitalStatus {
   value?: string;
 }
 
-const MAC_ADDRESS ="B4:3A:45:8A:2E:6C"; // Replace with the actual MAC address
+const MAC_ADDRESS ="E4:B3:23:B4:A0:34"; // Replace with the actual MAC address
 
 // Add interface for props
 interface VitalsDashboardProps {
