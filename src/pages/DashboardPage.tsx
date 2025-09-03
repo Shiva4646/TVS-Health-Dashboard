@@ -520,31 +520,27 @@ const formSchema = z.object({
 useEffect(() => {
   const fetchEmployees = async () => {
     try {
+      // Calculate the timestamp for 24 hours ago
+      const twentyFourHoursAgo = new Date();
+      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
       const { data, error } = await supabase
-        .from('Health Status')
-        .select(`
-          id,
-          "First name",
-          "Last name",
-          "Age",
-          "Gender",
-          "Device ID",
-          "Blood Group",
-          "Contact Number"
-        `)
-        .not('First name', 'is', null);
+        .from('Employee Details')
+        .select('*')
+        .gte('created_at', twentyFourHoursAgo.toISOString())
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       if (data) {
         const employees = data.map(record => ({
-          id: record.id,
+          id: record.id.toString(),
           name: `${record['First name']} ${record['Last name']}`,
           age: record['Age']?.toString() || '',
           gender: record['Gender'] || '',
-          deviceId: record['Device ID'] || '',
-          bloodGroup: record['Blood Group'] || '',
-          contactNumber: record['Contact Number'] || ''
+          deviceId: DEVICE_MAC_MAP[record.mac_address] || '',
+          bloodGroup: record['Blood group'] || '',
+          contactNumber: record['Contact number'] || ''
         }));
 
         setAllEmployees(employees);
@@ -552,8 +548,8 @@ useEffect(() => {
         // Create employee map for device association
         const empMap = new Map<string, { name: string }>();
         data.forEach(record => {
-          if (record['Device ID']) {
-            empMap.set(record['Device ID'], {
+          if (record.mac_address) {
+            empMap.set(record.mac_address, {
               name: `${record['First name']} ${record['Last name']}`
             });
           }
@@ -564,18 +560,26 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('Error fetching employees:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch employee records",
+        variant: "destructive",
+      });
     }
   };
 
   fetchEmployees();
 
-  // Set up real-time subscription
+  // Set up real-time subscription for new employee records
   const channel = supabase
-    .channel('employee-changes')
+    .channel('employee-details-changes')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: 'Health Status' },
-      fetchEmployees
+      { event: '*', schema: 'public', table: 'Employee Details' },
+      (payload) => {
+        // Refresh data when changes occur
+        fetchEmployees();
+      }
     )
     .subscribe();
 
