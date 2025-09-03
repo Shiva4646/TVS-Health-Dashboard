@@ -12,6 +12,19 @@ interface VitalChartProps {
 
 const MAX_HISTORY_POINTS = 10;
 
+// First, add a type for the vital ranges
+type VitalRanges = {
+  [key: string]: [number, number];
+};
+
+// Add the static ranges
+const VITAL_RANGES: VitalRanges = {
+  heartRate: [30, 170],      // BPM range
+  temperature: [15, 50],     // Temperature range
+  respiratoryRate: [5, 35],  // Respiratory rate range
+  bloodPressure: [40, 185]   // Blood pressure range
+};
+
 const SingleVitalChart = ({ 
   data, 
   vitalKey, 
@@ -48,7 +61,9 @@ const SingleVitalChart = ({
           <YAxis
             tick={{ fill: '#6b7280', fontSize: 9 }}
             width={30}
-            domain={['auto', 'auto']}
+            domain={VITAL_RANGES[vitalKey]} // Use static range
+            allowDataOverflow={true} // Prevent range expansion
+            tickCount={8} // Approximate number of ticks
           />
           <ChartTooltip
             content={({ active, payload, label }) => {
