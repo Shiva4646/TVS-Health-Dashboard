@@ -149,7 +149,7 @@ const LiveTest: ForwardRefRenderFunction<any, LiveTestProps> = ({ onAlertGenerat
               const newCount = prevStatus.count + 1;
               const cooldownPassed = now - prevStatus.lastAlertTime > 10000;
 
-              if (newCount >= 4 && cooldownPassed) {
+              if (newCount >= 3 && cooldownPassed) {
                 toast({
                   title: "⚠️ Activity Alert",
                   description: `Body Activity Status: ${value}`,
@@ -202,7 +202,7 @@ const LiveTest: ForwardRefRenderFunction<any, LiveTestProps> = ({ onAlertGenerat
               const newCount = prevStatus.count + 1;
               const cooldownPassed = now - prevStatus.lastAlertTime > 10000;
 
-              if (newCount >= 4 && cooldownPassed && value !== null) {
+              if (newCount >= 3 && cooldownPassed && value !== null) {
                 const { formatted, unit } = formatVitalValue(vitalName, value);
                 
                 // Show toast
