@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { forwardRef, ForwardRefRenderFunction, useEffect, useState, useCallback } from "react";
 import { AlertCircle, User2Icon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "../lib/supatest";
 import { Card, CardContent } from "@/components/ui/card";
 import { HeartPulse, Thermometer, Activity, Stethoscope } from "lucide-react";
+import { DEVICE_MAC_MAP } from "@/lib/utils";
 
 // Define vital ranges with warning thresholds
 const VITAL_RANGES = {
@@ -21,19 +22,7 @@ interface VitalStatus {
   value?: string;
 }
 
-const MAC_ADDRESS ="E4:B3:23:B4:A0:34"; // Replace with the actual MAC address
-
-// Add interface for props
-interface VitalsDashboardProps {
-  onAlertGenerated?: (alert: {
-    type: string;
-    value: number;
-    message: string;
-    severity: 'warning' | 'critical';
-  }) => void;
-}
-
-export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardProps) {
+const LiveTest: ForwardRefRenderFunction<any, LiveTestProps> = ({ onAlertGenerated, selectedMac }, ref) => {
   const { toast } = useToast();
   const [data, setData] = useState({
     heart_rate: 0,
@@ -42,6 +31,7 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
     respiratory_rate: 0,
     body_activity: "No Data" // default value
   });
+  const [selectedMac, setSelectedMac] = useState<string>("E4:B3:23:B4:A0:34");
 
   // Use a single state object for tracking vital statuses
   const [vitalStatuses, setVitalStatuses] = useState<Record<string, VitalStatus>>({
@@ -163,13 +153,6 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
                   duration: 5000,
                 });
 
-                onAlertGenerated?.({
-                  type: 'body_activity',
-                  value: 0,
-                  message: `Body Activity Status: ${value}`,
-                  severity: 'critical'
-                });
-
                 newStatuses[vitalName] = {
                   count: 0, // Reset counter after alert
                   lastAlertTime: now,
@@ -226,14 +209,6 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
                   duration: 5000,
                 });
 
-                // Send alert to parent component
-                onAlertGenerated?.({
-                  type: vitalName.toLowerCase(),
-                  value: Number(formatted),
-                  message: `${vitalName.replace(/([A-Z])/g, ' $1').trim()} is critical: ${formatted} ${unit}`,
-                  severity: 'critical'
-                });
-
                 newStatuses[vitalName] = {
                   count: 0,
                   lastAlertTime: now,
@@ -262,7 +237,7 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
 
       return newStatuses;
     });
-  }, [checkVitalCritical, formatVitalValue, toast, data, onAlertGenerated]);
+  }, [checkVitalCritical, formatVitalValue, toast, data]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -274,7 +249,7 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
         const { data: latestData, error } = await supabase
           .from("Health Status")
           .select("*")
-          .eq("mac_address", MAC_ADDRESS)
+          .eq("mac_address", selectedMac) // Use selectedMac instead of MAC_ADDRESS
           .order("updated_at", { ascending: false })
           .limit(1)
           .single();
@@ -302,7 +277,7 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
           event: '*', // Listen to all events
           schema: 'public',
           table: 'Health Status',
-          filter: `mac_address=eq.${MAC_ADDRESS}`
+          filter: `mac_address=eq.${selectedMac}`
         },
         payload => {
           console.log('Real-time update received:', payload);
@@ -325,7 +300,7 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
       clearInterval(pollInterval);
       channel.unsubscribe();
     };
-  }, [handleVitalUpdate]);
+  }, [handleVitalUpdate, selectedMac]);
 
   // Update the VitalsCard component
   const VitalsCard = ({ icon: Icon, title, value, unit, color, vitalName, isTextValue }: {
@@ -422,3 +397,5 @@ export default function VitalsDashboard({ onAlertGenerated }: VitalsDashboardPro
     </div>
   );
 }
+
+export default forwardRef(LiveTest);

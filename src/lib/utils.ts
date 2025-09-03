@@ -1,6 +1,19 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
+
+export const DEVICE_MAC_MAP = {
+  "B4:3A:45:8A:2E:6C": "Device 1",
+  "E4:B3:23:B4:A0:34": "Device 2",
+} as const;
+
+export const MAC_TO_DEVICE = Object.entries(DEVICE_MAC_MAP).reduce(
+  (acc, [mac, device]) => {
+    acc[mac] = device;
+    return acc;
+  },
+  {} as Record<string, string>
+);

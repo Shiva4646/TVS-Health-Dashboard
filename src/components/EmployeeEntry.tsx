@@ -47,27 +47,21 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
         throw new Error('Invalid device selected');
       }
 
-      // Create employee data with MAC address and initial vital values
+      // Create employee data matching the "Employee Details" table schema
       const newEmployeeData = {
         "First name": formData.firstName,
         "Last name": formData.lastName,
         "Age": parseInt(formData.age),
         "Gender": formData.gender,
-        "Device ID": formData.deviceId,
-        "Blood Group": formData.bloodGroup,
-        "Contact Number": formData.contactNumber,
         mac_address: macAddress,
-        heart_rate: 0,
-        temperature: 0,
-        respiratory_rate: 0,
-        blood_pressure: "0",
-        body_activity: "No Data",
-        updated_at: new Date().toISOString()
+        "Blood group": formData.bloodGroup,
+        "Contact number": formData.contactNumber,
+        created_at: new Date().toISOString()
       };
 
-      // Insert into Health Status table
+      // Insert into Employee Details table
       const { error } = await supabase
-        .from('Health Status')
+        .from('Employee Details')
         .insert(newEmployeeData);
 
       if (error) {
@@ -81,7 +75,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
         variant: "default",
       });
 
-      // Call onAddEmployee after successful insert
+      // Call onAddEmployee with the formatted data
       await onAddEmployee({
         name: `${formData.firstName} ${formData.lastName}`,
         age: formData.age,

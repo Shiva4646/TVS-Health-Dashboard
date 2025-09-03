@@ -87,6 +87,12 @@ const VITAL_THRESHOLDS = {
 const ALERT_COOLDOWN_MS = 30000; // 1-minute cooldown
 const CRITICAL_THRESHOLD = 5; // Number of consecutive readings
 
+const DEVICE_MAC_MAP: Record<string, string> = {
+  "B4:3A:45:8A:2E:6C": "DEV001",
+  "E4:B3:23:B4:A0:34": "DEV002"
+  // Add more MAC address to device ID mappings as needed
+};
+
 const DashboardPage = ({ onLogout, onShowAdmin }: DashboardPageProps) => {
   const { toast } = useToast();
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
@@ -151,8 +157,8 @@ const DashboardPage = ({ onLogout, onShowAdmin }: DashboardPageProps) => {
   const DEVICE_OFFLINE_THRESHOLD = 15000; // 15 seconds
 
   const [healthAlerts, setHealthAlerts] = useState<HealthAlert[]>([]);
-
-  const criticalCounters = useRef({
+    const liveTestRef = useRef<any>(null);
+    const criticalCounters = useRef({
     heart_rate: 0,
     temperature: 0,
     respiratory_rate: 0,
@@ -329,10 +335,44 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
       total
     };
   };
-  const handleDeviceSelect = (deviceId: string) => {
+  const handleDeviceSelect = async (deviceId: string) => {
     const device = devices.find(d => d.id === deviceId);
     if (device) {
       setSelectedDevice(device);
+      
+      try {
+        // Fetch employee details for this device's MAC address
+        const { data, error } = await supabase
+          .from('Employee Details')
+          .select('*')
+          .eq('mac_address', device.mac)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+
+        if (data) {
+          const employeeData = {
+            id: data.id.toString(),
+            name: `${data['First name']} ${data['Last name']}`,
+            age: data['Age']?.toString() || '',
+            gender: data['Gender'] || '',
+            deviceId: DEVICE_MAC_MAP[device.mac] || '',
+            bloodGroup: data['Blood group'] || '',
+            contactNumber: data['Contact number'] || ''
+          };
+          setSelectedEmployeeInCard(employeeData);
+        }
+
+        // Update LiveTest component's MAC address
+        if (liveTestRef.current) {
+          liveTestRef.current.setSelectedMac(device.mac);
+        }
+
+      } catch (error) {
+        console.error('Error fetching employee details:', error);
+      }
     }
   };
   const formatDate = (dateString: string) => {
@@ -894,7 +934,11 @@ useEffect(() => {
           <div className="flex flex-col h-full space-y-2">
             {/* LiveTest Component - Fixed height */}
             <div className="flex-shrink-0">
-              <LiveTest onAlertGenerated={handleAlertFromLiveTest} />
+              <LiveTest 
+                ref={liveTestRef}
+                onAlertGenerated={handleAlertFromLiveTest}
+                selectedMac={selectedDevice?.mac}
+              />
             </div>
 
             {/* Chart Card - Fills remaining space */}
