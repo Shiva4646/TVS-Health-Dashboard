@@ -22,6 +22,11 @@ interface VitalStatus {
   value?: string;
 }
 
+interface LiveTestProps {
+  onAlertGenerated?: (alert: any) => void;
+  selectedMac?: string;
+}
+
 const LiveTest: ForwardRefRenderFunction<any, LiveTestProps> = ({ onAlertGenerated, selectedMac }, ref) => {
   const { toast } = useToast();
   const [data, setData] = useState({
@@ -31,7 +36,6 @@ const LiveTest: ForwardRefRenderFunction<any, LiveTestProps> = ({ onAlertGenerat
     respiratory_rate: 0,
     body_activity: "No Data" // default value
   });
-  const [selectedMac, setSelectedMac] = useState<string>("E4:B3:23:B4:A0:34");
 
   // Use a single state object for tracking vital statuses
   const [vitalStatuses, setVitalStatuses] = useState<Record<string, VitalStatus>>({
