@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '../lib/supatest';
 
-// Add MAC address mapping at the top of the file
+// Update the MAC address mapping
 const DEVICE_MAC_MAP = {
-  'Device 1': 'E4:B3:23:B4:A0:34',
-  'Device 2': 'CC:0A:97:15:4C:BC'
+  'Device 1': 'B4:3A:45:8A:2E:6C',
+  'Device 2': 'E4:B3:23:B4:A0:34',
+  'Device 3': '54:32:04:89:95:1C'
+
 } as const;
 
 interface EmployeeEntryProps {
@@ -24,7 +26,6 @@ interface EmployeeEntryProps {
 
 const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
   const { toast } = useToast();
-  const [allEmployees, setAllEmployees] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -47,42 +48,25 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
         throw new Error('Invalid device selected');
       }
 
-      // Create employee data matching the "Employee Details" table schema
-      const newEmployeeData = {
-        "First name": formData.firstName,
-        "Last name": formData.lastName,
-        "Age": parseInt(formData.age),
-        "Gender": formData.gender,
-        mac_address: macAddress,
-        "Blood group": formData.bloodGroup,
-        "Contact number": formData.contactNumber,
-        created_at: new Date().toISOString()
-      };
-
-      // Insert into Employee Details table
+      // Insert directly into Employee Details table
       const { error } = await supabase
         .from('Employee Details')
-        .insert(newEmployeeData);
+        .insert({
+          "First name": formData.firstName,
+          "Last name": formData.lastName,
+          "Age": parseInt(formData.age),
+          "Gender": formData.gender,
+          "mac_address": macAddress,
+          "Blood group": formData.bloodGroup,
+          "Contact number": formData.contactNumber
+        });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Employee added successfully",
         variant: "default",
-      });
-
-      // Call onAddEmployee with the formatted data
-      await onAddEmployee({
-        name: `${formData.firstName} ${formData.lastName}`,
-        age: formData.age,
-        gender: formData.gender,
-        deviceId: formData.deviceId,
-        bloodGroup: formData.bloodGroup,
-        contactNumber: formData.contactNumber
       });
 
       // Reset form
@@ -106,61 +90,6 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
       });
     }
   };
-
-  // Fetch employees effect
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('Health Status')  // Remove quotes from table name
-          .select(`
-            id,
-            "First name",
-            "Last name",
-            "Age",
-            "Gender",
-            "Device ID",
-            "Blood Group",
-            "Contact Number"
-          `)
-          .not('First name', 'is', null);
-
-        if (error) throw error;
-
-        if (data) {
-          const employees = data.map(record => ({
-            id: record.id,
-            name: `${record['First name']} ${record['Last name']}`,
-            age: record['Age']?.toString() || '',
-            gender: record['Gender'] || '',
-            deviceId: record['Device ID'] || '',
-            bloodGroup: record['Blood Group'] || '',
-            contactNumber: record['Contact Number'] || ''
-          }));
-
-          setAllEmployees(employees);
-        }
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-      }
-    };
-
-    fetchEmployees();
-
-    // Update subscription
-    const channel = supabase
-      .channel('employee-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'Health Status' },
-        fetchEmployees
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   return (
     <div className="bg-white w-full max-w-2xl mx-auto p-2">
@@ -243,6 +172,7 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
             <option value="">Select Device ID</option>
             <option value="Device 1">Device 1 (e4:b3:23:b4:a0:34)</option>
             <option value="Device 2">Device 2 (CC:0A:97:15:4C:BC)</option>
+            <option value="Device 3">Device 3 (54:32:04:89:95:1C)</option>
             
           </select>
         </div>

@@ -17,7 +17,7 @@ import LiveTest from "../pages/livetest";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import Footer from '../components/Footer';
-
+import EmployeeDetailsCard from "@/components/EmployeeDetailsCard";
 
 interface Device {
   id: string;
@@ -49,6 +49,7 @@ interface Employee {
   deviceId: string;  // Changed from location
   bloodGroup: string;
   contactNumber: string;
+  mac_address?: string; // Added mac_address as optional property
 }
 
 interface DashboardPageProps {
@@ -88,15 +89,22 @@ const ALERT_COOLDOWN_MS = 30000; // 1-minute cooldown
 const CRITICAL_THRESHOLD = 5; // Number of consecutive readings
 
 const DEVICE_MAC_MAP: Record<string, string> = {
-  "B4:3A:45:8A:2E:6C": "DEV001",
-  "E4:B3:23:B4:A0:34": "DEV002"
+  "B4:3A:45:8A:2E:6C": "DEVICE 1",
+  "E4:B3:23:B4:A0:34": "DEVICE 2",
+  "54:32:04:89:95:1C": "DEVICE 3",
   // Add more MAC address to device ID mappings as needed
+};
+
+const getDeviceNameFromMac = (mac: string | undefined): string => {
+  if (!mac) return '';
+  return DEVICE_MAC_MAP[mac] || `Unknown Device (${mac})`;
 };
 
 const DashboardPage = ({ onLogout, onShowAdmin }: DashboardPageProps) => {
   const { toast } = useToast();
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isEmployeeEntryOpen, setIsEmployeeEntryOpen] = useState(false);
+  const [employeeDetails, setEmployeeDetails] = useState<Employee[]>([]);
 
   // Update the addAlert function to be memoized
   const addAlert = useCallback((
@@ -242,7 +250,8 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
         // Device name mapping
         const deviceNameMap: Record<string, string> = {
           "B4:3A:45:8A:2E:6C": "Device 1",
-          "E4:B3:23:B4:A0:34": "Device 2"
+          "E4:B3:23:B4:A0:34": "Device 2",
+          "54:32:04:89:95:1C": "Device 3",
         };
 
         data.forEach(row => {
@@ -340,38 +349,17 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
     if (device) {
       setSelectedDevice(device);
       
-      try {
-        // Fetch employee details for this device's MAC address
-        const { data, error } = await supabase
-          .from('Employee Details')
-          .select('*')
-          .eq('mac_address', device.mac)
-          .single();
+      // Find employee with matching MAC address from employeeDetails
+    const matchingEmployee = employeeDetails.find(emp => emp.mac_address === device.mac);
+    if (matchingEmployee) {
+      setSelectedEmployeeInCard(matchingEmployee);
+    } else {
+      setSelectedEmployeeInCard(null);
+    }
 
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        if (data) {
-          const employeeData = {
-            id: data.id.toString(),
-            name: `${data['First name']} ${data['Last name']}`,
-            age: data['Age']?.toString() || '',
-            gender: data['Gender'] || '',
-            deviceId: DEVICE_MAC_MAP[device.mac] || '',
-            bloodGroup: data['Blood group'] || '',
-            contactNumber: data['Contact number'] || ''
-          };
-          setSelectedEmployeeInCard(employeeData);
-        }
-
-        // Update LiveTest component's MAC address
-        if (liveTestRef.current) {
-          liveTestRef.current.setSelectedMac(device.mac);
-        }
-
-      } catch (error) {
-        console.error('Error fetching employee details:', error);
+      // Update LiveTest component's MAC address
+      if (liveTestRef.current) {
+        liveTestRef.current.setSelectedMac(device.mac);
       }
     }
   };
@@ -394,75 +382,6 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
       month: 'long',
       day: 'numeric'
     });
-  };
- 
-    
-
-  
-  
-
-
-
- 
-
-    
-
-  
-
-
- 
-
- 
-
-  const renderEmployeeDetails = () => {
-    if (!selectedDevice) return null;
-
-    return (
-      <Card className="bg-white rounded-3xl shadow-lg border-0 transform transition-all duration-300 hover:shadow-xl">
-        <CardHeader className="pb-1 px-2 pt-2">
-          <CardTitle className="text-gray-900 text-sm font-bold">Employee Details</CardTitle>
-        </CardHeader>
-        <CardContent className="p-2 pt-0">
-          {selectedDevice.assignedPerson === "Unassigned" ? (
-            <div className="text-center py-2">
-              <User className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-              <p className="text-xs text-gray-500">No employee assigned</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-medium">{selectedDevice.assignedPerson}</span>
-              </div>
-              {selectedDevice.age && (
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs">Age: {selectedDevice.age} years</span>
-                </div>
-              )}
-              {selectedDevice.gender && (
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs">Gender: {selectedDevice.gender}</span>
-                </div>
-              )}
-              {selectedDevice.bloodGroup && (
-                <div className="flex items-center space-x-2">
-                  <Droplets className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs">Blood Group: {selectedDevice.bloodGroup}</span>
-                </div>
-              )}
-              {selectedDevice.contactNumber && (
-                <div className="flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs">Contact: {selectedDevice.contactNumber}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
   };
 
   // Inside the DashboardPage component, add the alert handler
@@ -579,6 +498,60 @@ useEffect(() => {
       (payload) => {
         // Refresh data when changes occur
         fetchEmployees();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
+  // Add this useEffect to fetch employee details
+useEffect(() => {
+  const fetchEmployeeDetails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('Employee Details')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedEmployees = data.map(record => ({
+          id: record.id.toString(),
+          name: `${record['First name']} ${record['Last name']}`,
+          age: record['Age']?.toString() || '',
+          gender: record['Gender'] || '',
+          deviceId: getDeviceNameFromMac(record.mac_address) || '',
+          bloodGroup: record['Blood group'] || '',
+          contactNumber: record['Contact number'] || '',
+          mac_address: record.mac_address
+        }));
+
+        setEmployeeDetails(formattedEmployees);
+      }
+    } catch (error) {
+      console.error('Error fetching employee details:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch employee records",
+        variant: "destructive",
+      });
+    }
+  };
+
+  fetchEmployeeDetails();
+
+  // Set up real-time subscription
+  const channel = supabase
+    .channel('employee-details-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'Employee Details' },
+      () => {
+        fetchEmployeeDetails(); // Refresh data when changes occur
       }
     )
     .subscribe();
@@ -725,11 +698,11 @@ useEffect(() => {
             <Monitor className="w-8 h-8 text-blue-600" />
           </div>
           <h3 className="text-[16px] font-bold text-gray-900 mb-1">{selectedDevice.deviceName}</h3>
-          <p className="text-gray-600 text-[10px] mb-1">
+          {/* <p className="text-gray-600 text-[10px] mb-1">
             {selectedDevice.assignedPerson !== "Unassigned" 
               ? `Assigned to: ${selectedDevice.assignedPerson}`
               : "No employee assigned"}
-          </p>
+          </p> */}
           <p className="text-gray-500 text-[10px] mb-2">MAC: {selectedDevice.mac}</p>
           
           <div className="flex items-center justify-center space-x-2">
@@ -749,120 +722,19 @@ useEffect(() => {
   </CardContent>
 </Card>
 
-        {/* Employee Details Card */}
-        <Card className="flex-shrink-0 bg-white rounded-3xl shadow-lg border-0 transform transition-all duration-300 hover:shadow-xl">
-  <CardHeader className="pb-2 px-3 pt-3">
-    <CardTitle className="text-gray-900 text-[16px] font-semibold">Employee Details</CardTitle>
-  </CardHeader>
-  <CardContent className="p-3 pt-0">
-    <div className="space-y-2 animate-fade-in">
-      {/* Employee Selection Dropdown */}
-      <Select
-        value={selectedEmployeeInCard?.id || ""}
-        onValueChange={(id) => {
-          const selected = allEmployees.find(emp => emp.id === id);
-          setSelectedEmployeeInCard(selected || null);
-        }}
-      >
-        <SelectTrigger className="w-full h-8 bg-white border-2 border-gray-200 hover:border-blue-300 transition-colors duration-300 rounded-xl text-xs">
-          <SelectValue placeholder="Select an employee" />
-        </SelectTrigger>
-        <SelectContent className="bg-white border border-gray-200 shadow-xl z-50 rounded-xl">
-          {allEmployees.map(employee => (
-            <SelectItem 
-              key={employee.id} 
-              value={employee.id} 
-              className="cursor-pointer hover:bg-blue-50 transition-colors duration-200"
-            >
-              <div className="flex items-center space-x-2 w-full">
-                <User className="w-4 h-4 text-gray-600" />
-                <span className="font-medium text-gray-900 text-sm">{employee.name}</span>
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Display Employee Details */}
-      {selectedEmployeeInCard ? (
-        <div className="space-y-1 mt-2">
-          <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-blue-50 rounded-md border border-gray-100">
-            <User className="w-3 h-3 text-blue-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Name</p>
-              <p className="text-[12px] font-semibold text-gray-900 truncate">
-                {selectedEmployeeInCard.name}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-1">
-            <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-green-50 rounded-md border border-gray-100">
-              <User className="w-3 h-3 text-green-600 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Age</p>
-                <p className="text-xs font-semibold text-gray-900">
-                  {selectedEmployeeInCard.age}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-purple-50 rounded-md border border-gray-100">
-              <User className="w-3 h-3 text-purple-600 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Gender</p>
-                <p className="text-xs font-semibold text-gray-900">
-                  {selectedEmployeeInCard.gender}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-cyan-50 rounded-md border border-gray-100">
-            <Monitor className="w-3 h-3 text-cyan-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Device ID</p>
-              <p className="text-xs font-semibold text-gray-900">
-                {selectedEmployeeInCard.deviceId}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-red-50 rounded-md border border-gray-100">
-            <Droplets className="w-3 h-3 text-red-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Blood Group</p>
-              <p className="text-xs font-semibold text-gray-900">
-                {selectedEmployeeInCard.bloodGroup}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-1 p-1 bg-gradient-to-r from-gray-50 to-orange-50 rounded-md border border-gray-100">
-            <Phone className="w-3 h-3 text-orange-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[8px] text-gray-500 mb-0.5 font-medium">Contact</p>
-              <p className="text-xs font-semibold text-gray-900">
-                {selectedEmployeeInCard.contactNumber}
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-12"> {/* Increased from py-6 to py-12 and fetch*/}
-          <div className="flex flex-col items-center space-y-3"> {/* Added container with spacing */}
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-              <User className="w-6 h-6 text-gray-400" /> {/* Increased icon size */}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">No employee selected</p>
-              <p className="text-xs text-gray-400 mt-1">Select an employee to view details</p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  </CardContent>
-</Card>
+<EmployeeDetailsCard 
+  selectedEmployeeInCard={selectedEmployeeInCard}
+  setSelectedEmployeeInCard={setSelectedEmployeeInCard}
+  onDeviceSelect={(mac) => {
+    const deviceWithMac = devices.find(d => d.mac === mac);
+    if (deviceWithMac) {
+      setSelectedDevice(deviceWithMac);
+      if (liveTestRef.current) {
+        liveTestRef.current.setSelectedMac(deviceWithMac.mac);
+      }
+    }
+  }}
+/>
 
 {/* Health Alerts History Card */}
 <Card className="flex-grow bg-white rounded-3xl shadow-lg border-0">

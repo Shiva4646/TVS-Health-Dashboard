@@ -1,6 +1,8 @@
+// supabaseClient.ts
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://trjnsgmdzzthtdbjtlme.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyam5zZ21kenp0aHRkYmp0bG1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI2NzE5ODIsImV4cCI6MjA2ODI0Nzk4Mn0.Gb4cBGFaCjXoT77-HNPRA-HUwtXDCzetF1PoNi9Oazk';
 
-export const supabase = createClient(supabaseUrl, supabaseKey); 
+export const supabase = createClient(supabaseUrl, supabaseKey);
