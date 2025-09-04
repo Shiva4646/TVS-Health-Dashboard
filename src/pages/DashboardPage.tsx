@@ -91,7 +91,7 @@ const CRITICAL_THRESHOLD = 5; // Number of consecutive readings
 const DEVICE_MAC_MAP: Record<string, string> = {
   "B4:3A:45:8A:2E:6C": "DEVICE 1",
   "E4:B3:23:B4:A0:34": "DEVICE 2",
-  "54:32:04:89:95:1C": "DEVICE 3",
+    
   // Add more MAC address to device ID mappings as needed
 };
 
@@ -251,7 +251,7 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
         const deviceNameMap: Record<string, string> = {
           "B4:3A:45:8A:2E:6C": "Device 1",
           "E4:B3:23:B4:A0:34": "Device 2",
-          "54:32:04:89:95:1C": "Device 3",
+            
         };
 
         data.forEach(row => {

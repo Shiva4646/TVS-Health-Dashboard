@@ -8,7 +8,7 @@ import { supabase } from '../lib/supatest';
 const DEVICE_MAC_MAP = {
   'Device 1': 'B4:3A:45:8A:2E:6C',
   'Device 2': 'E4:B3:23:B4:A0:34',
-  'Device 3': '54:32:04:89:95:1C'
+     
 
 } as const;
 
@@ -172,7 +172,6 @@ const EmployeeEntry = ({ onBack, onAddEmployee }: EmployeeEntryProps) => {
             <option value="">Select Device ID</option>
             <option value="Device 1">Device 1 (e4:b3:23:b4:a0:34)</option>
             <option value="Device 2">Device 2 (CC:0A:97:15:4C:BC)</option>
-            <option value="Device 3">Device 3 (54:32:04:89:95:1C)</option>
             
           </select>
         </div>
