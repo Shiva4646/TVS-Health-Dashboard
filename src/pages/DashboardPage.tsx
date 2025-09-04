@@ -387,21 +387,47 @@ const vitalStatusRef = useRef<Record<string, VitalStatus>>({
   // Inside the DashboardPage component, add the alert handler
 const handleAlertFromLiveTest = useCallback((alertData: {
   type: string;
-  value: number;
+  value: number | string;
   message: string;
   severity: 'warning' | 'critical';
 }) => {
+  // Special handling for body activity - trigger immediately for critical
+  if (alertData.type === 'body_activity') {
+    const newAlert: HealthAlert = {
+      id: crypto.randomUUID(),
+      type: 'body_activity' as HealthAlert['type'],
+      message: `Fall Alert: ${alertData.value === 'Fall' ? 'Fall Detected' : alertData.value}`,
+      value: typeof alertData.value === 'number' ? alertData.value : 0,
+      time: new Date(),
+      severity: 'critical'
+    };
+
+    // Add new alert to the beginning of the array
+    setHealthAlerts(prev => [newAlert, ...prev.slice(0, 9)]);
+
+    // Show toast notification
+    toast({
+      title: "🚨 Fall Alert",
+      description: newAlert.message,
+      variant: "destructive",
+      duration: 10000,
+    });
+
+    return;
+  }
+
+  // Regular handling for other vital signs
   const newAlert: HealthAlert = {
     id: crypto.randomUUID(),
     type: alertData.type as HealthAlert['type'],
     message: alertData.message,
-    value: alertData.value,
+    value: Number(alertData.value),
     time: new Date(),
     severity: alertData.severity
   };
 
-  setHealthAlerts(prev => [newAlert, ...prev.slice(0, 5)]);
-}, []);
+  setHealthAlerts(prev => [newAlert, ...prev.slice(0, 9)]);
+}, [toast]);
 
   // Add this function to get current time in 24-hour format
 const getCurrentTime = () => {
