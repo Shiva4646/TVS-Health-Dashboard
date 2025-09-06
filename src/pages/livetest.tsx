@@ -8,7 +8,7 @@ import { DEVICE_MAC_MAP } from "@/lib/utils";
 
 // Define vital ranges with warning thresholds
 const VITAL_RANGES = {
-  heartRate: { min: 60, max: 140 },
+  heartRate: { min: 50, max: 140 },
   temperature: { min: 25, max: 40 },
   respiratoryRate: { min: 8, max: 30 },
   bloodPressure: { min: 110, max: 130 },
